@@ -20,6 +20,9 @@ set -o nounset                              # Treat unset variables as an error
 __ScriptVersion="2015.05.07"
 __ScriptName="bootstrap-salt.sh"
 __GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
+__CUSTOM_REPO_PATH="github.com/mubiic/saltstack"
+__CUSTOM_RAW_URLPATH="raw.githubusercontent.com/mubiic/saltstack"
+
 
 #======================================================================================================================
 #  Environment variables taken into account.
@@ -181,7 +184,7 @@ __check_config_dir() {
 #----------------------------------------------------------------------------------------------------------------------
 _KEEP_TEMP_FILES=${BS_KEEP_TEMP_FILES:-$BS_FALSE}
 _TEMP_CONFIG_DIR="null"
-_SALTSTACK_REPO_URL="git://github.com/saltstack/salt.git"
+_SALTSTACK_REPO_URL="git://${__CUSTOM_REPO_PATH}.git"
 _SALT_REPO_URL=${_SALTSTACK_REPO_URL}
 _TEMP_KEYS_DIR="null"
 _INSTALL_MASTER=$BS_FALSE
@@ -248,8 +251,8 @@ usage() {
   -n  No colours.
   -D  Show debug output.
   -c  Temporary configuration directory
-  -g  Salt repository URL. (default: git://github.com/saltstack/salt.git)
-  -G  Instead of cloning from git://github.com/saltstack/salt.git, clone from https://github.com/saltstack/salt.git (Usually necessary on systems which have the regular git protocol port blocked, where https usually is not)
+  -g  Salt repository URL. (default: git://${__CUSTOM_REPO_PATH}.git)
+  -G  Instead of cloning from git://${__CUSTOM_REPO_PATH}.git, clone from https://${__CUSTOM_REPO_PATH}.git (Usually necessary on systems which have the regular git protocol port blocked, where https usually is not)
   -k  Temporary directory holding the minion keys which will pre-seed
       the master.
   -s  Sleep time used when waiting for daemons to start, restart and when checking
@@ -307,10 +310,10 @@ do
          ;;
     g ) _SALT_REPO_URL=$OPTARG                          ;;
     G ) if [ "${_SALT_REPO_URL}" = "${_SALTSTACK_REPO_URL}" ]; then
-            _SALTSTACK_REPO_URL="https://github.com/saltstack/salt.git"
+            _SALTSTACK_REPO_URL="https://${__CUSTOM_REPO_PATH}.git"
             _SALT_REPO_URL=${_SALTSTACK_REPO_URL}
         else
-            _SALTSTACK_REPO_URL="https://github.com/saltstack/salt.git"
+            _SALTSTACK_REPO_URL="https://${__CUSTOM_REPO_PATH}.git"
         fi
          ;;
     k )  _TEMP_KEYS_DIR="$OPTARG"
@@ -4163,12 +4166,12 @@ install_smartos_deps() {
         if [ ! -f "$_SALT_ETC_DIR/minion" ] && [ ! -f "$_TEMP_CONFIG_DIR/minion" ]; then
             # shellcheck disable=SC2086
             curl $_CURL_ARGS -s -o "$_TEMP_CONFIG_DIR/minion" -L \
-                https://raw.githubusercontent.com/saltstack/salt/develop/conf/minion || return 1
+                https://${__CUSTOM_RAW_URLPATH}/develop/conf/minion || return 1
         fi
         if [ ! -f "$_SALT_ETC_DIR/master" ] && [ ! -f $_TEMP_CONFIG_DIR/master ]; then
             # shellcheck disable=SC2086
             curl $_CURL_ARGS -s -o "$_TEMP_CONFIG_DIR/master" -L \
-                https://raw.githubusercontent.com/saltstack/salt/develop/conf/master || return 1
+                https://${__CUSTOM_RAW_URLPATH}/develop/conf/master || return 1
         fi
     fi
 
@@ -4238,7 +4241,7 @@ install_smartos_post() {
             if [ ! -f "$_TEMP_CONFIG_DIR/salt-$fname.xml" ]; then
                 # shellcheck disable=SC2086
                 curl $_CURL_ARGS -s -o "$_TEMP_CONFIG_DIR/salt-$fname.xml" -L \
-                    "https://raw.githubusercontent.com/saltstack/salt/develop/pkg/smartos/salt-$fname.xml"
+                    "https://${__CUSTOM_RAW_URLPATH}/develop/pkg/smartos/salt-$fname.xml"
             fi
             svccfg import "$_TEMP_CONFIG_DIR/salt-$fname.xml"
             if [ "${VIRTUAL_TYPE}" = "global" ]; then
@@ -4621,7 +4624,7 @@ install_suse_11_stable_deps() {
                 if [ ! -f "$_SALT_ETC_DIR/$fname" ] && [ ! -f "$_TEMP_CONFIG_DIR/$fname" ]; then
                     # shellcheck disable=SC2086
                     curl $_CURL_ARGS -s -o "$_TEMP_CONFIG_DIR/$fname" -L \
-                        "https://raw.githubusercontent.com/saltstack/salt/develop/conf/$fname" || return 1
+                        "https://${__CUSTOM_RAW_URLPATH}/develop/conf/$fname" || return 1
                 fi
             done
         fi
@@ -4692,13 +4695,13 @@ install_suse_11_stable_post() {
 
             if [ -f /bin/systemctl ]; then
                 # shellcheck disable=SC2086
-                curl $_CURL_ARGS -L "https://github.com/saltstack/salt/raw/develop/pkg/salt-$fname.service" \
+                curl $_CURL_ARGS -L "https://${__CUSTOM_REPO_PATH}/raw/develop/pkg/salt-$fname.service" \
                     -o "/lib/systemd/system/salt-$fname.service" || return 1
                 continue
             fi
 
             # shellcheck disable=SC2086
-            curl $_CURL_ARGS -L "https://github.com/saltstack/salt/raw/develop/pkg/rpm/salt-$fname" \
+            curl $_CURL_ARGS -L "https://${__CUSTOM_REPO_PATH}/raw/develop/pkg/rpm/salt-$fname" \
                 -o "/etc/init.d/salt-$fname" || return 1
             chmod +x "/etc/init.d/salt-$fname"
 
