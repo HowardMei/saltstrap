@@ -19,6 +19,7 @@
 set -o nounset                              # Treat unset variables as an error
 __ScriptVersion="2015.08.06"
 __ScriptName="bootstrap-salt.sh"
+__GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
 
 #======================================================================================================================
 #  Environment variables taken into account.
@@ -2153,7 +2154,12 @@ install_debian_6_deps() {
     fi
 
     # shellcheck disable=SC2086
-    wget $_WGET_ARGS -q http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key -O - | apt-key add - || return 1
+    if [ -f "debian-salt-team-joehealy.gpg.key" ];then
+        cat "debian-salt-team-joehealy.gpg.key" | apt-key add - || return 1
+    else
+        # shellcheck disable=SC2086
+        wget $_WGET_ARGS -q ${__GPG_KEY_URLFILE} -O - | apt-key add - || return 1
+    fi
 
     if [ "$_PIP_ALLOWED" -eq $BS_TRUE ]; then
         echowarn "PyZMQ will be installed from PyPI in order to compile it against ZMQ3"
@@ -2275,7 +2281,12 @@ install_debian_7_deps() {
     fi
 
     # shellcheck disable=SC2086
-    wget $_WGET_ARGS -q http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key -O - | apt-key add - || return 1
+    if [ -f "debian-salt-team-joehealy.gpg.key" ];then
+        cat "debian-salt-team-joehealy.gpg.key" | apt-key add - || return 1
+    else
+        # shellcheck disable=SC2086
+        wget $_WGET_ARGS -q ${__GPG_KEY_URLFILE} -O - | apt-key add - || return 1
+    fi
 
     apt-get update || return 1
     __apt_get_install_noinput -t wheezy-backports libzmq3 libzmq3-dev python-zmq python-apt || return 1
@@ -2343,7 +2354,12 @@ install_debian_8_deps() {
     fi
 
     # shellcheck disable=SC2086
-    wget $_WGET_ARGS -q http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key -O - | apt-key add - || return 1
+    if [ -f "debian-salt-team-joehealy.gpg.key" ];then
+        cat "debian-salt-team-joehealy.gpg.key" | apt-key add - || return 1
+    else
+        # shellcheck disable=SC2086
+        wget $_WGET_ARGS -q ${__GPG_KEY_URLFILE} -O - | apt-key add - || return 1
+    fi
 
     apt-get update || return 1
     __apt_get_install_noinput -t jessie-backports libzmq3 libzmq3-dev python-zmq python-requests python-apt || return 1
