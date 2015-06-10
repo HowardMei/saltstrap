@@ -17,8 +17,10 @@
 #       CREATED: 10/15/2012 09:49:37 PM WEST
 #======================================================================================================================
 set -o nounset                              # Treat unset variables as an error
+
 __ScriptVersion="2015.07.22"
 __ScriptName="bootstrap-salt.sh"
+__ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.06.10"
 __GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
 __CUSTOM_REPO_PATH="github.com/mubiic/saltstack"
 __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/mubiic/saltstack"
@@ -185,7 +187,7 @@ __check_config_dir() {
 #----------------------------------------------------------------------------------------------------------------------
 _KEEP_TEMP_FILES=${BS_KEEP_TEMP_FILES:-$BS_FALSE}
 _TEMP_CONFIG_DIR="null"
-_SALTSTACK_REPO_URL="git://${__CUSTOM_REPO_PATH}.git"
+_SALTSTACK_REPO_URL="https://${__CUSTOM_REPO_PATH}.git"
 _SALT_REPO_URL=${_SALTSTACK_REPO_URL}
 _TEMP_KEYS_DIR="null"
 _INSTALL_MASTER=$BS_FALSE
@@ -215,7 +217,7 @@ __SIMPLIFY_VERSION=$BS_TRUE
 _LIBCLOUD_MIN_VERSION="0.14.0"
 _PY_REQUESTS_MIN_VERSION="2.0"
 _EXTRA_PACKAGES="git python-git"
-_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew"
+_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew hjson"
 _HTTP_PROXY=""
 _DISABLE_SALT_CHECKS=$BS_FALSE
 __SALT_GIT_CHECKOUT_DIR=${BS_SALT_GIT_CHECKOUT_DIR:-/tmp/git/salt}
@@ -254,7 +256,8 @@ usage() {
   -n  No colours.
   -D  Show debug output.
   -c  Temporary configuration directory
-  -g  Salt repository URL. (default: git://${__CUSTOM_REPO_PATH}.git)
+  -d  Salt git checkout destination. Default:__SALT_GIT_CHECKOUT_DIR = /tmp/git/salt
+  -g  Salt repository URL. (default: https://${__CUSTOM_REPO_PATH}.git)
   -G  Instead of cloning from git://${__CUSTOM_REPO_PATH}.git, clone from https://${__CUSTOM_REPO_PATH}.git (Usually necessary on systems which have the regular git protocol port blocked, where https usually is not)
   -k  Temporary directory holding the minion keys which will pre-seed
       the master.
@@ -294,6 +297,7 @@ EOT
 }   # ----------  end of function usage  ----------
 
 
+
 while getopts ":hvnDc:Gg:k:MSNXCPFUKIA:i:Lp:dH:Z" opt
 do
   case "${opt}" in
@@ -314,6 +318,7 @@ do
              exit 1
          fi
          ;;
+    d ) __SALT_GIT_CHECKOUT_DIR="$OPTARG"               ;;
     g ) _SALT_REPO_URL=$OPTARG                          ;;
     G ) if [ "${_SALT_REPO_URL}" = "${_SALTSTACK_REPO_URL}" ]; then
             _SALTSTACK_REPO_URL="https://${__CUSTOM_REPO_PATH}.git"
