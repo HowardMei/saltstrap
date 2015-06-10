@@ -22,6 +22,7 @@ __ScriptName="bootstrap-salt.sh"
 __GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
 __CUSTOM_REPO_PATH="github.com/mubiic/saltstack"
 __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/mubiic/saltstack"
+__GET_PIP_URLFILE="https://bootstrap.pypa.io/get-pip.py"
 
 
 #======================================================================================================================
@@ -213,7 +214,8 @@ _SALT_MINION_ID="null"
 __SIMPLIFY_VERSION=$BS_TRUE
 _LIBCLOUD_MIN_VERSION="0.14.0"
 _PY_REQUESTS_MIN_VERSION="2.0"
-_EXTRA_PACKAGES=""
+_EXTRA_PACKAGES="git python-git"
+_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew"
 _HTTP_PROXY=""
 __SALT_GIT_CHECKOUT_DIR=${BS_SALT_GIT_CHECKOUT_DIR:-/tmp/git/salt}
 
@@ -1767,7 +1769,9 @@ install_ubuntu_deps() {
         __PIP_PACKAGES=""
     else
         check_pip_allowed "You need to allow pip based installations (-P) in order to install the python package 'requests'"
-        __apt_get_install_noinput python-setuptools python-pip
+        [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+        pip install --upgrade ${_BASE_PIP_PACKAGES}
+        #__apt_get_install_noinput python-setuptools python-pip
         # shellcheck disable=SC2089
         __PIP_PACKAGES="requests>=$_PY_REQUESTS_MIN_VERSION"
     fi
@@ -1777,9 +1781,11 @@ install_ubuntu_deps() {
 
     if [ "$_INSTALL_CLOUD" -eq $BS_TRUE ]; then
         check_pip_allowed "You need to allow pip based installations (-P) in order to install 'apache-libcloud'"
-        if [ "${__PIP_PACKAGES}" = "" ]; then
-            __apt_get_install_noinput python-pip
+        if [ "$(which pip)" = "" ]; then
+            [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+            #__apt_get_install_noinput python-pip
         fi
+        pip install --upgrade ${_BASE_PIP_PACKAGES}
         # shellcheck disable=SC2089
         __PIP_PACKAGES="${__PIP_PACKAGES} 'apache-libcloud>=$_LIBCLOUD_MIN_VERSION'"
     fi
@@ -1865,8 +1871,10 @@ install_ubuntu_git_deps() {
         if [ "${__REQUIRED_TORNADO}" != "" ]; then
             check_pip_allowed "You need to allow pip based installations (-P) in order to install the python package '${__REQUIRED_TORNADO}'"
             if [ "$(which pip)" = "" ]; then
-                __apt_get_install_noinput python-setuptools python-pip
+                [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+                #__apt_get_install_noinput python-setuptools python-pip
             fi
+            pip install --upgrade ${_BASE_PIP_PACKAGES}
             pip install -U "'${__REQUIRED_TORNADO}'"
         fi
     fi
@@ -2066,6 +2074,8 @@ install_debian_deps() {
 
     # shellcheck disable=SC2086
     __apt_get_install_noinput ${__PACKAGES} || return 1
+    [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+    pip install --upgrade ${_BASE_PIP_PACKAGES}
 
     if [ "$_INSTALL_CLOUD" -eq $BS_TRUE ]; then
         # shellcheck disable=SC2089
@@ -2147,6 +2157,8 @@ _eof
         __apt_get_install_noinput -t unstable dpkg liblzma5 python mime-support || return 1
         __apt_get_install_noinput -t unstable libzmq3 libzmq3-dev || return 1
         __apt_get_install_noinput build-essential python-dev python-pip python-setuptools || return 1
+        [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+        pip install --upgrade ${_BASE_PIP_PACKAGES}
 
         # Saltstack's Unstable Debian repository
         if [ "$(grep -R 'debian.saltstack.com' /etc/apt)" = "" ]; then
@@ -2172,6 +2184,8 @@ _eof
     # Python requests is available through Squeeze backports
     # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
     __apt_get_install_noinput python-pip procps pciutils python-requests
+    [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+    pip install --upgrade ${_BASE_PIP_PACKAGES}
 
     # Need python-apt for managing packages via Salt
     __apt_get_install_noinput python-apt
@@ -2259,6 +2273,8 @@ install_debian_7_deps() {
         __PACKAGES="build-essential python-dev python-pip"
         # shellcheck disable=SC2086
         __apt_get_install_noinput ${__PACKAGES} || return 1
+        [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+        pip install --upgrade ${_BASE_PIP_PACKAGES}
         check_pip_allowed "You need to allow pip based installations (-P) in order to install apache-libcloud"
         pip install -U "apache-libcloud>=$_LIBCLOUD_MIN_VERSION" || return 1
     fi
@@ -2333,6 +2349,8 @@ install_debian_8_deps() {
         __PACKAGES="build-essential python-dev python-pip"
         # shellcheck disable=SC2086
         __apt_get_install_noinput ${__PACKAGES} || return 1
+        [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+        pip install --upgrade ${_BASE_PIP_PACKAGES}
         pip install -U "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
     fi
 
@@ -2367,6 +2385,8 @@ install_debian_git_deps() {
 
     __apt_get_install_noinput lsb-release python python-pkg-resources python-crypto \
         python-jinja2 python-m2crypto python-yaml msgpack-python python-pip || return 1
+    [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+    pip install --upgrade ${_BASE_PIP_PACKAGES}
 
     __git_clone_and_checkout || return 1
 
@@ -2415,6 +2435,8 @@ install_debian_6_git_deps() {
 
         # shellcheck disable=SC2086
         __apt_get_install_noinput ${__PACKAGES} || return 1
+        [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+        pip install --upgrade ${_BASE_PIP_PACKAGES}
 
         easy_install -U pyzmq Jinja2 || return 1
 
@@ -2885,12 +2907,15 @@ install_centos_stable_deps() {
         yum -y install ${__PACKAGES} --enablerepo=${_EPEL_REPO} || return 1
     fi
 
+    [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+    pip install --upgrade ${_BASE_PIP_PACKAGES}
+
     if [ "$_INSTALL_CLOUD" -eq $BS_TRUE ]; then
         check_pip_allowed "You need to allow pip based installations (-P) in order to install apache-libcloud"
         if [ "$DISTRO_MAJOR_VERSION" -eq 5 ]; then
             easy_install-2.6 "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
         else
-            pip install "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
+            pip install -U "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
         fi
     fi
 
@@ -4596,9 +4621,12 @@ install_suse_11_stable_deps() {
     # shellcheck disable=SC2086,SC2090
     __zypper_install ${__PACKAGES} || return 1
 
+    [ -f get-pip.py ] && python get-pip.py || wget $_WGET_ARGS -q ${__GET_PIP_URLFILE} -O - | python
+    pip install --upgrade ${_BASE_PIP_PACKAGES}
+
     if [ "$SUSE_PATCHLEVEL" -eq 1 ]; then
         # There's no python-PyYaml in SP1, let's install it using pip
-        pip install PyYaml || return 1
+        pip install -U PyYaml || return 1
     fi
 
     # PIP based installs need to copy configuration files "by hand".
@@ -4671,7 +4699,7 @@ install_suse_11_stable() {
     else
         # USE_SETUPTOOLS=1 To work around
         # error: option --single-version-externally-managed not recognized
-        USE_SETUPTOOLS=1 pip install salt || return 1
+        USE_SETUPTOOLS=1 pip install -U salt || return 1
     fi
     return 0
 }
