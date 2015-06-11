@@ -250,11 +250,11 @@ usage() {
     - ${__ScriptName} git develop
     - ${__ScriptName} git v0.17.0
     - ${__ScriptName} git 8c3fadf15ec183e5ce8c63739850d543617e4357
-    - ${__ScriptName} -D -d /tmp/mysalt -G -g mubiic/mysalt -P -M -F -L -i mynode git v2015.5.2
+    - ${__ScriptName} -D -d /tmp/mysalt -g mubiic/mysalt -G -P -M -F -L -i mynode git v2015.5.2
     - ${__ScriptName} -D -d /tmp/mysalt -g https://github.com/mubiicsrc/mysalt.git -P -M -F -L -i mynode git v2015.5.2
     - ${__ScriptName} -D -d /tmp/mysalt -g git://user:pass@bitbucket.org/mubiicsrc/mysalt.git -P -M -F -L -i mynode git v2015.5.2
 
-  Options:
+  Options (put multi opts in a line as following order, wrong orders will lead to errors):
   -h  Display this message
   -v  Display script version
   -n  No colours.
@@ -336,13 +336,13 @@ do
             __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/saltstack/salt"
         fi
          ;;
-    G ) echowarn "-G means explicitly treat -g option value as the github.com repo name and adjust official raw path accordingly." >&2
+    G ) echowarn "-G after -g means treat -g option value as the github.com repo name and adjust official raw path accordingly." >&2
         if [ "$(echo ${_SALT_REPO_URL} | awk -F/ '{print NF-1}')" -eq 1 ]; then
             __CUSTOM_REPO_NAME="$(echo ${_SALT_REPO_URL} | sed 's/\.git$//' 2>/dev/null)"
             __CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
             __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/${__CUSTOM_REPO_NAME}"
         else
-            echoerror "-g option value has a illegal format, please use a saltstack/salt style repo name from github.com"
+            echoerror "-g option value ${_SALT_REPO_URL} has a illegal format, please use a saltstack/salt style repo name from github.com"
             exit 1
         fi
          ;;
