@@ -332,9 +332,11 @@ do
         if [ "$(echo ${_SALT_REPO_URL} | awk -F/ '{print NF-1}')" -eq 1 ]; then
             __CUSTOM_REPO_NAME="$(echo ${_SALT_REPO_URL} | sed 's/\.git$//' 2>/dev/null)"
             __CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
+            _SALT_REPO_URL="https://github.com/${__CUSTOM_REPO_NAME}.git"
             __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/${__CUSTOM_REPO_NAME}"
         else
             echoerror "-g option value ${_SALT_REPO_URL} has a illegal format, please use a saltstack/salt style repo name from github.com"
+            echoerror "Or check if the -g option is set before -G because opts order matters here. Type ${0} -h for details."
             exit 1
         fi
          ;;
@@ -1292,11 +1294,11 @@ __git_clone_and_checkout() {
             cd "${__SALT_GIT_CHECKOUT_DIR}"
         fi
 
-        if [ "$(echo "$_SALT_REPO_URL" | grep -c -e "\(\(git\|https\)://github\.com/\|git@github\.com:\)${__CUSTOM_REPO_NAME}\.git")" -eq 0 ]; then
+        if [ -z "$(git tag -l 2>/dev/null)" ]; then
             # We need to add the saltstack repository as a remote and fetch tags for proper versioning
-            echoinfo "Adding ${__CUSTOM_REPO_NAME}'s Salt repository as a remote"
+            echoinfo "Adding ${__CUSTOM_REPO_PATH}'s Salt repository as a remote"
             git remote add upstream "$_SALTSTACK_REPO_URL" || return 1
-            echodebug "Fetching upstream(${__CUSTOM_REPO_NAME}'s Salt repository) git tags"
+            echodebug "Fetching upstream(${__CUSTOM_REPO_PATH}'s Salt repository) git tags"
             git fetch --tags upstream || return 1
         fi
 
