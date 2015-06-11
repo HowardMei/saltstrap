@@ -21,8 +21,9 @@ __ScriptVersion="2015.05.07"
 __ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.06.10"
 __ScriptName="bootstrap-salt.sh"
 __GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
-__CUSTOM_REPO_PATH="github.com/mubiic/saltstack"
-__CUSTOM_RAW_URLPATH="raw.githubusercontent.com/mubiic/saltstack"
+__CUSTOM_REPO_NAME="saltstack/salt"
+__CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
+__CUSTOM_RAW_URLPATH="raw.githubusercontent.com/${__CUSTOM_REPO_NAME}"
 __GET_PIP_URLFILE="https://bootstrap.pypa.io/get-pip.py"
 
 
@@ -213,10 +214,10 @@ _SALT_MASTER_ADDRESS=${BS_SALT_MASTER_ADDRESS:-null}
 _SALT_MINION_ID="null"
 # __SIMPLIFY_VERSION is mostly used in Solaris based distributions
 __SIMPLIFY_VERSION=$BS_TRUE
-_LIBCLOUD_MIN_VERSION="0.14.0"
+_LIBCLOUD_MIN_VERSION="0.16.0"
 _PY_REQUESTS_MIN_VERSION="2.0"
 _EXTRA_PACKAGES="git python-git"
-_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew hjson"
+_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew apache-libcloud"
 _HTTP_PROXY=""
 __SALT_GIT_CHECKOUT_DIR=${BS_SALT_GIT_CHECKOUT_DIR:-/tmp/git/salt}
 
@@ -247,6 +248,7 @@ usage() {
     - ${__ScriptName} git develop
     - ${__ScriptName} git v0.17.0
     - ${__ScriptName} git 8c3fadf15ec183e5ce8c63739850d543617e4357
+    - ${__ScriptName} -D -d /tmp/mysalt -g mubiic/mysalt -G -P -M -F -L -i mynode git v2015.5.2
 
   Options:
   -h  Display this message
@@ -254,13 +256,13 @@ usage() {
   -n  No colours.
   -D  Show debug output.
   -c  Temporary configuration directory
-  -d  Salt git checkout destination. Default:__SALT_GIT_CHECKOUT_DIR = /tmp/git/salt
-  -g  Salt repository URL. (default: https://${__CUSTOM_REPO_PATH}.git)
-  -G  Instead of cloning from git://${__CUSTOM_REPO_PATH}.git, clone from https://${__CUSTOM_REPO_PATH}.git (Usually necessary on systems which have the regular git protocol port blocked, where https usually is not)
+  -d  Salt git checkout destination. (Default:__SALT_GIT_CHECKOUT_DIR = /tmp/git/salt)
+  -g  Salt repository URL. (Default: https://${__CUSTOM_REPO_PATH}.git) or Github repo name with -G option
+  -G  Use Github as repository domain name when -g option is a repo name like: saltstack/salt
   -k  Temporary directory holding the minion keys which will pre-seed
       the master.
   -s  Sleep time used when waiting for daemons to start, restart and when checking
-      for the services running. Default: ${__DEFAULT_SLEEP}
+      for the services running. (Default: ${__DEFAULT_SLEEP})
   -M  Also install salt-master
   -S  Also install salt-syndic
   -N  Do not install salt-minion
@@ -298,7 +300,6 @@ do
 
     h )  usage; exit 0                                  ;;
 
-    v )  echo "$0 -- Version $__ScriptVersion"; exit 0  ;;
     n )  _COLORS=0; __detect_color_support              ;;
     D )  _ECHO_DEBUG=$BS_TRUE                           ;;
     c )  _TEMP_CONFIG_DIR=$(__check_config_dir "$OPTARG")
@@ -313,12 +314,26 @@ do
          fi
          ;;
     d ) __SALT_GIT_CHECKOUT_DIR="$OPTARG"               ;;
-    g ) _SALT_REPO_URL=$OPTARG                          ;;
-    G ) if [ "${_SALT_REPO_URL}" = "${_SALTSTACK_REPO_URL}" ]; then
-            _SALTSTACK_REPO_URL="https://${__CUSTOM_REPO_PATH}.git"
-            _SALT_REPO_URL=${_SALTSTACK_REPO_URL}
+    g ) _SALT_REPO_URL="$OPTARG"
+        if echo "${_SALT_REPO_URL}" | grep -iq "github.com"; then
+            __CUSTOM_REPO_NAME="$(echo ${_SALT_REPO_URL} | awk -F'github.com/' '{print $NF}' 2>/dev/null | awk -F/ '{print $1"/"$2}' 2>/dev/null)"
+            __CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
+            __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/${__CUSTOM_REPO_NAME}"
         else
-            _SALTSTACK_REPO_URL="https://${__CUSTOM_REPO_PATH}.git"
+            # No github.com detected in url, and bitbucket has a hashed raw url, so let's use the official repo conf files
+            # if this is a repo name of github.com, please turn on -G option too
+            __CUSTOM_REPO_PATH="github.com/saltstack/salt"
+            __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/saltstack/salt"
+        fi
+         ;;
+    G ) echowarn "-G means explicitly treat -g option value as the github.com repo name and adjust official raw path accordingly." >&2
+        if [ "$(echo ${_SALT_REPO_URL} | awk -F/ '{print NF-1}')" -eq 1 ]; then
+            __CUSTOM_REPO_NAME="${_SALT_REPO_URL}"
+            __CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
+            __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/${__CUSTOM_REPO_NAME}"
+        else
+            echoerror "-g option value has a illegal format, please use a saltstack/salt style repo name from github.com"
+            exit 1
         fi
          ;;
     k )  _TEMP_KEYS_DIR="$OPTARG"
@@ -338,14 +353,19 @@ do
     U )  _UPGRADE_SYS=$BS_TRUE                          ;;
     K )  _KEEP_TEMP_FILES=$BS_TRUE                      ;;
     I )  _INSECURE_DL=$BS_TRUE                          ;;
-    A )  _SALT_MASTER_ADDRESS=$OPTARG                   ;;
-    i )  _SALT_MINION_ID=$OPTARG                        ;;
+    A )  _SALT_MASTER_ADDRESS="$OPTARG"                   ;;
+    i )  _SALT_MINION_ID="$OPTARG"                        ;;
     L )  _INSTALL_CLOUD=$BS_TRUE                        ;;
     p )  _EXTRA_PACKAGES="$_EXTRA_PACKAGES $OPTARG"     ;;
     H )  _HTTP_PROXY="$OPTARG"                          ;;
     Z)   _ENABLE_EXTERNAL_ZMQ_REPOS=$BS_TRUE            ;;
 
-
+    v ) echoinfo "To bootstrap ${_SALT_REPO_URL} w/ other options"
+        echoinfo "by ${0} -- Version ${__ScriptVersion}"
+        echoinfo "with raw conf from: https://${__CUSTOM_REPO_PATH}/raw"
+        echoinfo "and from https://${__CUSTOM_RAW_URLPATH}"
+         exit 0
+         ;;
     \?)  echo
          echoerror "Option does not exist : $OPTARG"
          usage
@@ -476,7 +496,10 @@ if [ "${CALLER}x" = "${0}x" ]; then
     CALLER="PIPED THROUGH"
 fi
 
-echoinfo "${CALLER} ${0} -- Version ${__ScriptVersion}"
+echoinfo "Bootstrap ${_SALT_REPO_URL} ${ITYPE} ${GIT_REV}"
+echoinfo "by ${CALLER} ${0} -- Version ${__ScriptVersion}"
+echoinfo "with raw conf from: https://${__CUSTOM_REPO_PATH}/raw"
+echoinfo "and from https://${__CUSTOM_RAW_URLPATH}"
 #echowarn "Running the unstable version of ${__ScriptName}"
 
 #---  FUNCTION  -------------------------------------------------------------------------------------------------------
@@ -1267,11 +1290,11 @@ __git_clone_and_checkout() {
             cd "${__SALT_GIT_CHECKOUT_DIR}"
         fi
 
-        if [ "$(echo "$_SALT_REPO_URL" | grep -c -e '\(\(git\|https\)://github\.com/\|git@github\.com:\)saltstack/salt\.git')" -eq 0 ]; then
+        if [ "$(echo "$_SALT_REPO_URL" | grep -c -e "\(\(git\|https\)://github\.com/\|git@github\.com:\)${__CUSTOM_REPO_NAME}\.git")" -eq 0 ]; then
             # We need to add the saltstack repository as a remote and fetch tags for proper versioning
-            echoinfo "Adding SaltStack's Salt repository as a remote"
+            echoinfo "Adding ${__CUSTOM_REPO_NAME}'s Salt repository as a remote"
             git remote add upstream "$_SALTSTACK_REPO_URL" || return 1
-            echodebug "Fetching upstream(SaltStack's Salt repository) git tags"
+            echodebug "Fetching upstream(${__CUSTOM_REPO_NAME}'s Salt repository) git tags"
             git fetch --tags upstream || return 1
         fi
 
