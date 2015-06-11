@@ -250,7 +250,9 @@ usage() {
     - ${__ScriptName} git develop
     - ${__ScriptName} git v0.17.0
     - ${__ScriptName} git 8c3fadf15ec183e5ce8c63739850d543617e4357
-    - ${__ScriptName} -D -d /tmp/mysalt -g mubiic/mysalt -G -P -M -F -L -i mynode git v2015.5.2
+    - ${__ScriptName} -D -d /tmp/mysalt -G -g mubiic/mysalt -P -M -F -L -i mynode git v2015.5.2
+    - ${__ScriptName} -D -d /tmp/mysalt -g https://github.com/mubiicsrc/mysalt.git -P -M -F -L -i mynode git v2015.5.2
+    - ${__ScriptName} -D -d /tmp/mysalt -g git://user:pass@bitbucket.org/mubiicsrc/mysalt.git -P -M -F -L -i mynode git v2015.5.2
 
   Options:
   -h  Display this message
@@ -323,7 +325,7 @@ do
     d ) __SALT_GIT_CHECKOUT_DIR="$OPTARG"               ;;
     g ) _SALT_REPO_URL="$OPTARG"
         if echo "${_SALT_REPO_URL}" | grep -iq "github.com"; then
-            __CUSTOM_REPO_NAME="$(echo ${_SALT_REPO_URL} | awk -F'github.com/' '{print $NF}' 2>/dev/null | awk -F/ '{print $1"/"$2}' 2>/dev/null)"
+            __CUSTOM_REPO_NAME="$(echo ${_SALT_REPO_URL} | awk -F'github.com/' '{print $NF}' 2>/dev/null | awk -F/ '{print $1"/"$2}' 2>/dev/null | sed 's/\.git$//' 2>/dev/null)"
             __CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
             __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/${__CUSTOM_REPO_NAME}"
         else
@@ -335,7 +337,7 @@ do
          ;;
     G ) echowarn "-G means explicitly treat -g option value as the github.com repo name and adjust official raw path accordingly." >&2
         if [ "$(echo ${_SALT_REPO_URL} | awk -F/ '{print NF-1}')" -eq 1 ]; then
-            __CUSTOM_REPO_NAME="${_SALT_REPO_URL}"
+            __CUSTOM_REPO_NAME="$(echo ${_SALT_REPO_URL} | sed 's/\.git$//' 2>/dev/null)"
             __CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
             __CUSTOM_RAW_URLPATH="raw.githubusercontent.com/${__CUSTOM_REPO_NAME}"
         else
