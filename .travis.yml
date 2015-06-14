@@ -1,17 +1,14 @@
 before_install:
-  - "if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then sudo pip install unittest2; fi"
-  - sudo pip install --use-mirrors --mirrors=http://g.pypi.python.org/ --mirrors=http://c.pypi.python.org/ --mirrors=http://pypi.crate.io/ unittest-xml-reporting
-  - sudo apt-get remove -y -o DPkg::Options::=--force-confold --purge libzmq3
-  - sudo apt-get autoremove -y -o DPkg::Options::=--force-confold --purge
-  - sudo ls -lah /etc/apt/sources.list.d/
-  - sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list
-  - sudo pip install git+https://github.com/saltstack/salt-testing.git#egg=SaltTesting
-
+- if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then sudo pip install unittest2; fi
+- sudo pip install --use-mirrors --mirrors=http://g.pypi.python.org/ --mirrors=http://c.pypi.python.org/
+  --mirrors=http://pypi.crate.io/ unittest-xml-reporting
+- sudo apt-get remove -y -o DPkg::Options::=--force-confold --purge libzmq3
+- sudo apt-get autoremove -y -o DPkg::Options::=--force-confold --purge
+- sudo ls -lah /etc/apt/sources.list.d/
+- sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list
+- sudo pip install git+https://github.com/saltstack/salt-testing.git#egg=SaltTesting
 script:
-  - BS_ECHO_DEBUG=1 sudo -E python tests/runtests.py -vv
-
+- BS_ECHO_DEBUG=1 sudo -E python tests/runtests.py -vv
 notifications:
-  irc:
-    channels: "irc.freenode.org#salt-devel"
-    on_success: change
-    on_failure: change
+  slack:
+    secure: zRyjpdF0pioKyXAOmQcDH1/GHdcHquXqf2YIB9+OGcUwW1JXwOjYLqKuX0ceXZlMrm1uooBnzWsm9hriLeP5SGKvQeSFTMA95LlptI/Ht5Q5auYPoeG0yN0SFTWn3VKaRe7JfITgc1M2WPqF5qX1jlKNCAQ+4oXfd25QwIvB67PmMKq5f8BmeDsJlaD34WZyvBvb3A2I+fEbFkGUt3jWn2DmkHGqZ7NZ7hiHRHa3ed65gUpPbdD5w0WHwbBYCinjac2nbURasbyUJJaXJcdUxDivzpXGfwbAL/Ks6ue9Hq1XgFj8at9tFfQMXOTKtm5qmsohNRlqv0Bztuc5ENsetavPad6KS6WsQfJ0TkGx2oJki0FxdXLzppvh0wExe3EAvHUEXifGvwco9GNeP15RkdGHtgUVl7wneUOpIFA4XWpymiiDC8gI9ceAqWZFBVfkye7vFWeBV/7DK1rlLyJbiWC8DVuKu4lpL+1z7HD68MDU3WSgJ3yFp5U3AaMfTkgPGv4YIvczoYalQEumJe/cAbNnnsqMQPlCAObk38L9/EjTEwPmqfLtpYE3Vmrpc53pC/URK7dT+0Nkts+clqnyp9iLSPMeJlG2iPf4y30mnIRbjejGNkCSQOrbI0XEbgoGANsUr3Ci5/E+upvTUKyCkzOuen7qmOmlFT1XUFcQ2tA=
