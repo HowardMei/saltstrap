@@ -18,7 +18,7 @@
 #======================================================================================================================
 set -o nounset                              # Treat unset variables as an error
 __ScriptVersion="2015.05.07"
-__ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.06.10"
+__ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.06.15"
 __ScriptName="bootstrap-salt.sh"
 __GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
 __CUSTOM_REPO_NAME="mubiic/saltstack"
@@ -216,8 +216,8 @@ _SALT_MINION_ID="null"
 __SIMPLIFY_VERSION=$BS_TRUE
 _LIBCLOUD_MIN_VERSION="0.16.0"
 _PY_REQUESTS_MIN_VERSION="2.0"
-_EXTRA_PACKAGES="git python-git"
-_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew apache-libcloud"
+_EXTRA_PACKAGES="git python-git ca-certificates"
+_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew apache-libcloud M2Crypto msgpack-python urllib3 docker-py"
 _HTTP_PROXY=""
 __SALT_GIT_CHECKOUT_DIR=${BS_SALT_GIT_CHECKOUT_DIR:-/tmp/git/salt}
 
