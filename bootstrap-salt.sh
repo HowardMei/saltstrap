@@ -18,7 +18,7 @@
 #======================================================================================================================
 set -o nounset                              # Treat unset variables as an error
 __ScriptVersion="2015.05.07"
-__ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.06.15"
+__ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.06.25"
 __ScriptName="bootstrap-salt.sh"
 __GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
 __CUSTOM_REPO_NAME="mubiic/saltstack"
