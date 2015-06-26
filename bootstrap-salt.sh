@@ -1147,7 +1147,7 @@ fi
 if ([ "${DISTRO_NAME_L}" != "ubuntu" ] && [ "$ITYPE" = "daily" ]); then
     echoerror "${DISTRO_NAME} does not have daily packages support"
     exit 1
-elif ([ "${DISTRO_NAME_L}" != "ubuntu" ] && [ "$STABLE_REV" != "latest" ]); then
+elif ([ "${DISTRO_NAME_L}" != "ubuntu" ] && [ "$ITYPE" = "stable" ] && [ "$STABLE_REV" != "latest" ]); then
     echoerror "${DISTRO_NAME} does not have major version pegged packages support"
     exit 1
 fi
@@ -4156,6 +4156,10 @@ install_smartos_deps() {
         fi
     fi
 
+    if [ "$_INSTALL_CLOUD" -eq $BS_TRUE  ]; then
+        pkgin -y install py27-apache-libcloud || return 1
+    fi
+
     if [ "${_EXTRA_PACKAGES}" != "" ]; then
         echoinfo "Installing the following extra packages as requested: ${_EXTRA_PACKAGES}"
         # shellcheck disable=SC2086
@@ -4170,7 +4174,7 @@ install_smartos_git_deps() {
     install_smartos_deps || return 1
 
     if [ "$(which git)" = "" ]; then
-        pkgin -y install scmgit || return 1
+        pkgin -y install git || return 1
     fi
 
     if [ -f "${__SALT_GIT_CHECKOUT_DIR}/requirements/base.txt" ]; then
