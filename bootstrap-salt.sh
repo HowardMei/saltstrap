@@ -19,7 +19,7 @@
 set -o nounset                              # Treat unset variables as an error
 __ScriptVersion="2015.08.06"
 __ScriptName="bootstrap-salt.sh"
-__ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.06.10"
+__ScriptVersion="v${__ScriptVersion}/Mubiic-r2015.08.05"
 __GPG_KEY_URLFILE="http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key"
 __CUSTOM_REPO_NAME="saltstack/salt"
 __CUSTOM_REPO_PATH="github.com/${__CUSTOM_REPO_NAME}"
@@ -216,8 +216,8 @@ _SALT_MINION_ID="null"
 __SIMPLIFY_VERSION=$BS_TRUE
 _LIBCLOUD_MIN_VERSION="0.16.0"
 _PY_REQUESTS_MIN_VERSION="2.0"
-_EXTRA_PACKAGES="git python-git"
-_BASE_PIP_PACKAGES="pip setuptools virtualenv pss gitpython pew apache-libcloud"
+_EXTRA_PACKAGES="git ca-certificates"
+_BASE_PIP_PACKAGES="virtualenv pss gitpython pew apache-libcloud msgpack-python docker-py docker-compose"
 _HTTP_PROXY=""
 _DISABLE_SALT_CHECKS=$BS_FALSE
 __SALT_GIT_CHECKOUT_DIR=${BS_SALT_GIT_CHECKOUT_DIR:-/tmp/git/salt}
@@ -260,7 +260,7 @@ usage() {
   -n  No colours.
   -D  Show debug output.
   -c  Temporary configuration directory
-  -d  Salt git checkout destination. (Default:__SALT_GIT_CHECKOUT_DIR = /tmp/git/salt)
+  -t  Target git checkout path for Salt. (Default:__SALT_GIT_CHECKOUT_DIR = /tmp/git/salt)
   -g  Salt repository URL. (Default: https://${__CUSTOM_REPO_PATH}.git) or Github repo name with -G option
   -G  Use Github as repository domain name when -g option is a repo name like: saltstack/salt
   -k  Temporary directory holding the minion keys which will pre-seed
@@ -322,7 +322,7 @@ do
              exit 1
          fi
          ;;
-    d ) __SALT_GIT_CHECKOUT_DIR="$OPTARG"               ;;
+    t ) __SALT_GIT_CHECKOUT_DIR="$OPTARG"               ;;
     g ) _SALT_REPO_URL="$OPTARG"
         if echo "${_SALT_REPO_URL}" | grep -iq "github.com"; then
             __CUSTOM_REPO_NAME="$(echo ${_SALT_REPO_URL} | awk -F'github.com/' '{print $NF}' 2>/dev/null | awk -F/ '{print $1"/"$2}' 2>/dev/null | sed 's/\.git$//' 2>/dev/null)"
@@ -1854,7 +1854,7 @@ install_ubuntu_deps() {
         fi
         pip install --upgrade ${_BASE_PIP_PACKAGES}
         # shellcheck disable=SC2089
-        __PIP_PACKAGES="${__PIP_PACKAGES} 'apache-libcloud>=$_LIBCLOUD_MIN_VERSION'"
+        __PIP_PACKAGES="${__PIP_PACKAGES} apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
     fi
 
     apt-get update
@@ -2157,7 +2157,7 @@ install_debian_deps() {
         # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
         __PACKAGES="${__PACKAGES} python-pip"
         # shellcheck disable=SC2089
-        __PIP_PACKAGES="${__PIP_PACKAGES} 'requests>=$_PY_REQUESTS_MIN_VERSION'"
+        __PIP_PACKAGES="${__PIP_PACKAGES} requests>=$_PY_REQUESTS_MIN_VERSION"
     fi
 
     # shellcheck disable=SC2086
@@ -2167,7 +2167,7 @@ install_debian_deps() {
 
     if [ "$_INSTALL_CLOUD" -eq $BS_TRUE ]; then
         # shellcheck disable=SC2089
-        __PIP_PACKAGES="${__PIP_PACKAGES} 'apache-libcloud>=$_LIBCLOUD_MIN_VERSION'"
+        __PIP_PACKAGES="${__PIP_PACKAGES} apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
     fi
 
     if [ "${__PIP_PACKAGES}" != "" ]; then
