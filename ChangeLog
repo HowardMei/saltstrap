@@ -1,7 +1,26 @@
-Version 2015.xx.xx:
+Version 2015.07.xx:
+	* Fix python-requests installations for Ubuntu >= 14.04 LTS. #631, #632, #633
+	* Install python-crypto from Chris Lea's PPA for Ubuntu < 14.04
+	* Exit the git checkout directory before deleting it. Thanks Bret Fisher. #634
+	* Use prefix /usr for centos git install. Thanks Stanislav B. #638
+	* Drop Ubuntu EOL versions. All Ubuntu version before 12.04.
+
+
+Version 2015.07.22:
+	* Fix tornado installation in Ubuntu. Thanks Yushi Nakai. #627
+	* Install tornado using pip on Ubuntu for Salt's v2015.8.xx onward stable releases.
+	* Install requests on Ubuntu from Chris Lea's PPA. #630
+
+Version 2015.07.17:
 	* Make sure setuptools is installed before using it. #598.
 	* `systemd` is only fully supported from 15.04 onwards. #602
 	* Fix debian mirrors issue. Thanks Wolodja Wentland(babilen). #606
+	* Fix python-jinja2 repo move on RHEL6. Thanks lomeroe. #621
+	* Allow skipping services. Thanks denmat. #455
+	* Fix missing Debian init script. #607 saltstack/salt#25270 and saltstack/salt#25456
+	* Fix SmartOS etc path. Thanks Bret Fisher. #624
+	* Fix possible unbound variable in Gentoo. #625
+	* Properly detect the git binary in SmartOS. #611
 
 Version 2015.05.07:
 	* Lower required requests version dependency. Use system requests package where possible.
