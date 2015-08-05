@@ -282,7 +282,7 @@ usage() {
       'install_<distro>_check_services' checks. You can also do this by
       touching /tmp/disable_salt_checks on the target host. Defaults \${BS_FALSE}
   -H  Use the specified http proxy for the installation
-  -Z  Enable external software source for newer ZeroMQ(Only available for RHEL/CentOS/Fedora based distributions)
+  -Z  Enable external software source for newer ZeroMQ(Only available for RHEL/CentOS/Fedora/Ubuntu based distributions)
 
 EOT
 }   # ----------  end of function usage  ----------
@@ -504,6 +504,7 @@ __exit_cleanup() {
         if [ $_KEEP_TEMP_FILES -eq $BS_FALSE ]; then
             # Clean up the checked out repository
             echodebug "Cleaning up the Salt Temporary Git Repository"
+            cd "${__SALT_GIT_CHECKOUT_PARENT_DIR}"
             rm -rf "${__SALT_GIT_CHECKOUT_DIR}"
         else
             echowarn "Not cleaning up the Salt Temporary git repository on request"
@@ -1326,14 +1327,8 @@ __check_end_of_life_versions() {
         ubuntu)
             # Ubuntu versions not supported
             #
-            #  < 10
-            #  = 10.10
-            #  = 11.04
-            #  = 11.10
-            if ([ "$DISTRO_MAJOR_VERSION" -eq 10 ] && [ "$DISTRO_MINOR_VERSION" -eq 10 ]) || \
-               ([ "$DISTRO_MAJOR_VERSION" -eq 11 ] && [ "$DISTRO_MINOR_VERSION" -eq 04 ]) || \
-               ([ "$DISTRO_MAJOR_VERSION" -eq 11 ] && [ "$DISTRO_MINOR_VERSION" -eq 10 ]) || \
-               [ "$DISTRO_MAJOR_VERSION" -lt 10 ]; then
+            #  < 12.04
+            if [ "$DISTRO_MAJOR_VERSION" -lt 12 ]; then
                 echoerror "End of life distributions are not supported."
                 echoerror "Please consider upgrading to the next stable. See:"
                 echoerror "    https://wiki.ubuntu.com/Releases"
@@ -1766,14 +1761,20 @@ install_ubuntu_deps() {
     # Need python-apt for managing packages via Salt
     __PACKAGES="${__PACKAGES} python-apt"
 
-    echoinfo "Installing Python Requests/Chardet from Chris Lea's PPA repository"
-    if [ "$DISTRO_MAJOR_VERSION" -gt 11 ] || ([ "$DISTRO_MAJOR_VERSION" -eq 11 ] && [ "$DISTRO_MINOR_VERSION" -gt 04 ]); then
-        # Above Ubuntu 11.04 add a -y flag
-        add-apt-repository -y "ppa:chris-lea/python-requests" || return 1
-        add-apt-repository -y "ppa:chris-lea/python-chardet" || return 1
-    else
-        add-apt-repository "ppa:chris-lea/python-requests" || return 1
-        add-apt-repository "ppa:chris-lea/python-chardet" || return 1
+    if [ "$DISTRO_MAJOR_VERSION" -lt 14 ]; then
+        echoinfo "Installing Python Requests/Chardet from Chris Lea's PPA repository"
+        if [ "$DISTRO_MAJOR_VERSION" -gt 11 ] || ([ "$DISTRO_MAJOR_VERSION" -eq 11 ] && [ "$DISTRO_MINOR_VERSION" -gt 04 ]); then
+            # Above Ubuntu 11.04 add a -y flag
+            add-apt-repository -y "ppa:chris-lea/python-requests" || return 1
+            add-apt-repository -y "ppa:chris-lea/python-chardet" || return 1
+            add-apt-repository -y "ppa:chris-lea/python-urllib3" || return 1
+            add-apt-repository -y "ppa:chris-lea/python-crypto" || return 1
+        else
+            add-apt-repository "ppa:chris-lea/python-requests" || return 1
+            add-apt-repository "ppa:chris-lea/python-chardet" || return 1
+            add-apt-repository "ppa:chris-lea/python-urllib3" || return 1
+            add-apt-repository "ppa:chris-lea/python-crypto" || return 1
+        fi
     fi
 
     __PACKAGES="${__PACKAGES} python-requests"
@@ -3026,10 +3027,10 @@ install_centos_git() {
         _PYEXE=python2
     fi
     if [ -f "${__SALT_GIT_CHECKOUT_DIR}/salt/syspaths.py" ]; then
-        $_PYEXE setup.py install --salt-config-dir="$_SALT_ETC_DIR" || \
-            $_PYEXE setup.py --salt-config-dir="$_SALT_ETC_DIR" install || return 1
+        $_PYEXE setup.py install --prefix=/usr --salt-config-dir="$_SALT_ETC_DIR" || \
+            $_PYEXE setup.py --prefix=/usr --salt-config-dir="$_SALT_ETC_DIR" install || return 1
     else
-        $_PYEXE setup.py install || return 1
+        $_PYEXE setup.py install --prefix=/usr || return 1
     fi
     return 0
 }
