@@ -221,6 +221,7 @@ _BASE_PIP_PACKAGES="virtualenv pss gitpython pew apache-libcloud msgpack-python 
 _HTTP_PROXY=""
 _DISABLE_SALT_CHECKS=$BS_FALSE
 __SALT_GIT_CHECKOUT_DIR=${BS_SALT_GIT_CHECKOUT_DIR:-/tmp/git/salt}
+_NO_DEPS=$BS_FALSE
 
 
 #---  FUNCTION  -------------------------------------------------------------------------------------------------------
@@ -295,13 +296,14 @@ usage() {
       touching /tmp/disable_salt_checks on the target host. Defaults \${BS_FALSE}
   -H  Use the specified http proxy for the installation
   -Z  Enable external software source for newer ZeroMQ(Only available for RHEL/CentOS/Fedora/Ubuntu based distributions)
+  -b  Assume that dependencies are already installed and software sources are set up.
+      If git is selected, git tree is still checked out as dependency step.
 
 EOT
 }   # ----------  end of function usage  ----------
 
 
-
-while getopts ":hvnDc:Gg:k:MSNXCPFUKIA:i:Lp:dH:Z" opt
+while getopts ":hvnDc:Gg:k:MSNXCPFUKIA:i:Lp:dH:Zb" opt
 do
   case "${opt}" in
 
@@ -368,7 +370,8 @@ do
     p )  _EXTRA_PACKAGES="$_EXTRA_PACKAGES $OPTARG"     ;;
     d )  _DISABLE_SALT_CHECKS=$BS_TRUE                  ;;
     H )  _HTTP_PROXY="$OPTARG"                          ;;
-    Z)   _ENABLE_EXTERNAL_ZMQ_REPOS=$BS_TRUE            ;;
+    Z )  _ENABLE_EXTERNAL_ZMQ_REPOS=$BS_TRUE            ;;
+    b )  _NO_DEPS=$BS_TRUE                              ;;
 
     v ) echoinfo "To bootstrap ${_SALT_REPO_URL} w/ other options"
         echoinfo "by ${0} -- Version ${__ScriptVersion}"
@@ -3276,7 +3279,7 @@ __test_rhel_optionals_packages() {
     yum list installed yum-utils > /dev/null 2>&1 || yum -y install yum-utils --enablerepo=${_EPEL_REPO} || return 1
 
     if [ "$DISTRO_MAJOR_VERSION" -ge 7 ]; then
-        yum-config-manager --enable \*server-optional || return 1
+        yum-config-manager --enable \*server-optional-rpms || return 1
     fi
 
     if [ "$DISTRO_MAJOR_VERSION" -ge 6 ]; then
@@ -4098,6 +4101,10 @@ install_freebsd_10_stable_deps() {
     install_freebsd_9_stable_deps
 }
 
+install_freebsd_11_stable_deps() {
+    install_freebsd_9_stable_deps
+}
+
 config_freebsd_salt() {
     # Set _SALT_ETC_DIR to ports default
     _SALT_ETC_DIR=${BS_SALT_ETC_DIR:-/usr/local/etc/salt}
@@ -4172,6 +4179,10 @@ install_freebsd_9_stable() {
 }
 
 install_freebsd_10_stable() {
+    install_freebsd_9_stable
+}
+
+install_freebsd_11_stable() {
     install_freebsd_9_stable
 }
 
@@ -4253,6 +4264,10 @@ install_freebsd_9_stable_post() {
 }
 
 install_freebsd_10_stable_post() {
+    install_freebsd_9_stable_post
+}
+
+install_freebsd_11_stable_post() {
     install_freebsd_9_stable_post
 }
 
@@ -5207,12 +5222,19 @@ daemons_running() {
 # LET'S PROCEED WITH OUR INSTALLATION
 #======================================================================================================================
 # Let's get the dependencies install function
-DEP_FUNC_NAMES="install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}_${ITYPE}_deps"
-DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}${PREFIXED_DISTRO_MINOR_VERSION}_${ITYPE}_deps"
-DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}_deps"
-DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}${PREFIXED_DISTRO_MINOR_VERSION}_deps"
-DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}_${ITYPE}_deps"
-DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}_deps"
+
+if [ "$_NO_DEPS" -eq $BS_FALSE ]; then
+    DEP_FUNC_NAMES="install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}_${ITYPE}_deps"
+    DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}${PREFIXED_DISTRO_MINOR_VERSION}_${ITYPE}_deps"
+    DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}_deps"
+    DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}${PREFIXED_DISTRO_MAJOR_VERSION}${PREFIXED_DISTRO_MINOR_VERSION}_deps"
+    DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}_${ITYPE}_deps"
+    DEP_FUNC_NAMES="$DEP_FUNC_NAMES install_${DISTRO_NAME_L}_deps"
+elif [ "${ITYPE}" = "git" ]; then
+    DEP_FUNC_NAMES="__git_clone_and_checkout"
+else
+    DEP_FUNC_NAMES=""
+fi
 
 DEPS_INSTALL_FUNC="null"
 for FUNC_NAME in $(__strip_duplicates "$DEP_FUNC_NAMES"); do
