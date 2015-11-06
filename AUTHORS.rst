@@ -18,6 +18,7 @@ bruce-one                   bruce-one
 C. R. Oldham                cro                    cr@saltstack.com
 Cam                         camereonsparr
 Chris Rebert                cvrebert               chris.rebert@hulu.com
+Chris Buechler              cbuechler              cmb@pfsense.org
 Christer Edwards            cedwards
 denmat                      denmat
 Dag Viggo Lokøen            dagvl                  dag.viggo@lokoen.org
@@ -54,6 +55,7 @@ Matthew Mead-Briggs         mattmb
 Matthew Willson             ixela
 Matthieu Guegan             mguegan
 Michael Scherer             mscherer
+Michele Bologna             mbologna               michele.bologna@gmail.com
 Mike Carlson                m87carlson             mike@bayphoto.com
 Mike Place                  cachedout              mp@saltstack.com
 nevins-b                    nevins-b
@@ -67,6 +69,7 @@ Pedro Paulo                 pedropaulovc
 Peter Tripp                 notpeter
 ptonelli                    ptonelli
 Raymond Barbiero            visualphoenix
+Rob Eden                    hedinfaok
 Roberto Aguilar             rca                    roberto@baremetal.io
 Roman Inflianskas           rominf                 infroma@gmail.com
 Ronald van Zantvoort        The-Loeki              ronald@pcextreme.nl
